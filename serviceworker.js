@@ -47,6 +47,11 @@ var RRV_CACHE_URLS = [
 
 
 // pause the install event until we cache necessary assets
+
+/*
+ * possibly cach the leaflet maps by something akin to ...
+    else if (event.request.url.startsWith('https://api.tiles'))
+ */
 this.addEventListener('install', function(event) {
   event.waitUntil(
     caches.open('RRV_CACHE').then(function(cache) {

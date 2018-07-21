@@ -16,22 +16,30 @@ let restaurantNeighborhoods;
  */
 let allRestaurants;
 
+const PORT = 1337;
+
 class DBHelper {
 
   /*
    * Database URL to retrieve all restaurants
    */
   static get ALL_RESTAURANTS_URL() {
-    const port = 1337 // Change this to your server port
-    return `http://localhost:${port}/restaurants`;
+    //  const port = 1337 // Change this to your server port
+    return `http://localhost:${PORT}/restaurants`;
   }
 
   /*
    * Database URL to restaurant by id
    */
   static get RESTAURANTS_BYID_URL() {
-    const port = 1337 // Change this to your server port
-    return `http://localhost:${port}/restaurants/${id}`;
+    return `http://localhost:${PORT}/restaurants/${id}`;
+  }
+
+  /*
+   * Database URL for reviews
+   */
+  static get RESTAURANT_REVIEWS() {
+    const REVIEWS_URL = `http://localhost:${PORT}/reviews/`;
   }
 
 
