@@ -87,7 +87,7 @@ var getReviews = function() {
               openDatabase().then(function(db) {
                 var objectStore = openObjectStore(db, "reviews", "readwrite");
                 for (var i = 0; i < reviews.length; i++) {
-        git          objectStore.add(reviews[i]);
+                  objectStore.add(reviews[i]);
                 }
                 resolve(reviews);
               });
