@@ -2,10 +2,14 @@
  * Common database helper functions.
  * curl "http://localhost:1337/restaurants"
  * curl "http://localhost:1337/restaurants/{3}"
+ *
+ * Relies on Jake Archibald's IndexedDB Promise library
+ * found in js/idb.js
+ *
  */
 
 /*
- * filled by call to fetchRestaurants
+ * filled by call to getNeighborhoodsCuisinesSelect
  * used in select lists to filter restaurants
  */
 let restaurantCuisines;
@@ -16,187 +20,139 @@ let restaurantNeighborhoods;
  */
 let allRestaurants;
 
-var dbVERSION = 1;
-var dbNAME = 'restaurant_reviews';
+const dbVERSION = 1;
+const dbNAME = 'restaurant_reviews';
+const dbOBJECTSTORE = 'reviews';
 
+// port for Sails dev server
 const PORT = 1337;
 
 class DBHelper {
-
-  // Database URL to retrieve all restaurants
-  static get ALL_RESTAURANTS_URL() {
-    //  const port = 1337 // Change this to your server port
+  // Database URL.
+  static get DATABASE_URL() {
+    // const port = 1337 // Change this to your server port
     return `http://localhost:${PORT}/restaurants`;
   }
 
-  // Database URL to restaurant by id
-  static get RESTAURANTS_BYID_URL() {
-    return `http://localhost:${PORT}/restaurants/${id}`;
-  }
-
-  // Database URL for reviews
-  static get RESTAURANT_REVIEWS() {
-    const REVIEWS_URL = `http://localhost:${PORT}/reviews/`;
-  }
-
-/* -------------------------------------------------------------------------------------------
- * based on Tal Alter's book Building Progressive Web Apps
- * some modifications made:
- *    converted some functions to arrow functions
- *    a bit more generic than sample used in book
- *
- */
-
-  static openDatabase() {
-     return new Promise(function(resolve, reject) {
-        // make sure IndexdDB is supported first
-        if (!self.indexedDB) {
-           reject("Uh oh, IndexedDB is NOT supported in this browser!");
+  /*
+   * open indexedDB and upgrade if needed
+   */
+  static openIDB() {
+    // Does the browser support service worker?
+    if (!navigator.serviceWorker) {
+      return Promise.resolve();
+    }
+    // make sure IndexdDB is supported
+    if (!self.indexedDB) {
+      reject("Uh oh, IndexedDB is NOT supported in this browser!");
+    }
+    return idb.open(dbNAME, dbVERSION, function(upgradeDb) {
+      switch (upgradeDB.oldVersion) { // straight from Jake's IDB lib
+        case 0:
+        case 1: {
+            var store = upgradeDb.createObjectStore(dbOBJECTSTORE, { keyPath: 'id' });
+            store.createIndex('by-id', 'id');
         }
-        var request = self.indexedDB.open(dbNAME, dbVERSION);
-        request.onerror = event => { reject(`Database error: ${event.target.error}`) };
+        case 2: {
 
-        request.onupgradeneeded = event => {
-           var db = event.target.result;
-           if (!db.objectStoreNames.contains("reviews")) {
-              db.createObjectStore("reviews", {keyPath: "id"});
-           }
-        };
-        request.onsuccess = event => {
-           resolve(event.target.result);
-        };
-     });
-  };
+        }
+      } // switch
+    });
+  }
 
-  static openObjectStore(db, storeName, transactionMode) {
-     return db.transaction(storeName, transactionMode)
-              .objectStore(storeName);
-  };
+  /*
+   * takes the data from the API (data) and stores it in IDB
+   */
+  static storeAllInIDB(data) {
+    return DBHelper.openIDB().then(function(db) {
+      if(!db) return;
 
-  static addToObjectStore(storeName, object) {
-     return new Promise(function(resolve, reject) {
-        openDatabase().then(function(db) {
-           openObjectStore(db, storeName, "readwrite")
-              .add(object).onsuccess = resolve;
-        }).catch(errorMessage => {
-           reject(errorMessage);
-        });
-     });
-  };
-
-  static updateInObjectStore(storeName, id, object) {
-     return new Promise(function(resolve, reject) {
-        openDatabase().then(function(db) {
-           openObjectStore(db, storeName, "readwrite")
-              .openCursor().onsuccess = event => {
-                 var cursor = event.target.result;
-                 if (!cursor) {
-                    reject("Record not founnd in object store");
-                 }
-                 if (cursor.value.id === id) {
-                    cursor.update(object).onsuccess = resolve;
-                    return;
-                 }
-                 cursor.continue();
-              };
-        }).catch( errorMessage => {
-           reject(errorMessage);
-        });
-     });
-  };
-
-  static getReviews() {
-    return new Promise(function(resolve) {
-      openDatabase().then(function(db) {
-        var objectStore = openObjectStore(db, "reviews");
-        var reviews = [];
-        objectStore.openCursor().onsuccess = function(event) {
-          var cursor = event.target.result;
-          if (cursor) {
-            reviews.push(cursor.value);
-            cursor.continue();
-          } else {
-            if (reviews.length > 0) {
-              resolve(reviews);
-            } else {
-              getReviewsFromServer().then(function(reviews) {
-                openDatabase().then(function(db) {
-                  var objectStore = openObjectStore(db, "reviews", "readwrite");
-                  for (var i = 0; i < reviews.length; i++) {
-                    objectStore.add(reviews[i]);
-                  }
-                  resolve(reviews);
-                });
-              });
-            }
-          }
-        };
-      }).catch(function() {
-        getReviewsFromServer().then(function(reviews) {
-          resolve(reviews);
-        });
+      var tx = db.transaction(dbOBJECTSTORE, 'readwrite');
+      var store = tx.objectStore(dbOBJECTSTORE);
+      data.forEach(function(restaurant) {
+        store.put(restaurant);
       });
+      return tx.complete;
     });
-  };
+  }
 
-  static getReviewsFromServer() {
-    return new Promise(function(resolve) {
-      if (self.$) {
-        $.getJSON("/reservations.json", resolve);
-      } else if (self.fetch) {
-        fetch("/reservations.json").then(function(response) {
-          return response.json();
-        }).then(function(reviews) {
-          resolve(reviews);
-        });
-      }
+  /*
+   * fetches data from API
+   * then stores it in IDB
+   */
+  static getFromAPIsaveToIDB() {
+    return fetch(DBHelper.DATABASE_URL)
+      .then(function(response){
+        return response.json();
+    }).then(restaurants => {
+      DBHelper.storeAllInIDB(restaurants);
+      return restaurants;
     });
-  };
+  }
+
+  /*
+   * gets all the retaurant data from IDB
+   */
+  static getAllFromIDB() {
+    return DBHelper.openIDB().then(function(db){
+      if(!db) return;
+
+      var store = db.transaction(dbOBJECTSTORE).objectStore(dbOBJECTSTORE);
+      // console.log(store); // testing
+      return store.getAll();
+    });
+  }
 
 
-  /* -------------------------------------------------------------------------------------------
-   * original DBHelper code follows - not fully original, has been modified to meet project
-   * requirements...
-   *
-   * converted from xhr to fetch()
-   * fill in the cuisine and neighborhood variables that are used in <select> filters
-   * also put all the restaurant json data into variable for reuse (minimize calls to db)
+  /*
+   * Filters the neighborhoods and cuisines that are used in the
+   * select lists on main page
+   */
+  static getNeighborhoodsCuisinesSelect(restaurants) {
+    // Get the neighborhoods from restaurants
+    const neighborhoods = restaurants.map((v, i) => restaurants[i].neighborhood);
+
+    // filter the neighborhoods
+    restaurantNeighborhoods = neighborhoods.filter((v, i) => neighborhoods.indexOf(v) == i);
+
+    // Get cuisines from restaurant data
+    const cuisines = restaurants.map((v, i) => restaurants[i].cuisine_type);
+
+    // filter the cuisines - only unique
+    restaurantCuisines = cuisines.filter((v, i) => cuisines.indexOf(v) == i);
+
+    // store all the restaurants for reuse if needed
+    allRestaurants = restaurants;
+  }
+
+
+  /*
+   * Fetch all restaurants either from IDB or API
+   * then update vars that hold
+   * cuisines and neighborhoods
    */
   static fetchRestaurants(callback) {
-    fetch(DBHelper.ALL_RESTAURANTS_URL).then(response => {
-      response.json()
-        .then(restaurants => {
-          if (restaurants.length) {
-
-            // Get the neighborhoods from restaurants
-            const neighborhoods = restaurants.map((v, i) => restaurants[i].neighborhood);
-
-            // filter the neighborhoods
-            restaurantNeighborhoods = neighborhoods.filter((v, i) => neighborhoods.indexOf(v) == i);
-
-            // Get cuisines from restaurant data
-            const cuisines = restaurants.map((v, i) => restaurants[i].cuisine_type);
-
-            // filter the cuisines - only unique
-            restaurantCuisines = cuisines.filter((v, i) => cuisines.indexOf(v) == i);
-
-            // store all the restaurants for reuse
-            allRestaurants = restaurants;
-            // console.log('fetchRestaurants\n', allRestaurants);
-          }
-          callback(null, restaurants);
-        });
-    }).catch(error => {
-      callback(`UH OH! ${error}`, null);
-    });
+    return DBHelper.getAllFromIDB().then(restaurants => {
+      if(restaurants.length) {
+        return Promise.resolve(restaurants);
+      } else {
+        return DBHelper.getFromAPIsaveToIDB();
+      }
+    })
+    .then(restaurants=> {
+      DBHelper.getNeighborhoodsCuisinesSelect(restaurants);
+      callback(null, restaurants);
+    })
+    .catch(error => {
+      callback(error, null);
+    })
   }
 
-
-  /**
+  /*
    * Fetch a restaurant by its ID.
    */
   static fetchRestaurantById(id, callback) {
-    // fetch all restaurants with proper error handling
+    // fetch all restaurants with proper error handling.
     DBHelper.fetchRestaurants((error, restaurants) => {
       if (error) {
         callback(error, null);
@@ -205,13 +161,13 @@ class DBHelper {
         if (restaurant) { // Got the restaurant
           callback(null, restaurant);
         } else {
-          callback('Restaurant does not exist', null);
+          callback(`Restaurant with ID ${id} does not exist`, null);
         }
       }
     });
   }
 
-  /**
+  /*
    * Fetch restaurants by a cuisine type with proper error handling.
    */
   static fetchRestaurantByCuisine(cuisine, callback) {
@@ -243,7 +199,6 @@ class DBHelper {
     });
   }
 
-
   /**
    * Fetch restaurants by a cuisine and a neighborhood with proper error handling.
    */
@@ -263,7 +218,7 @@ class DBHelper {
         callback(null, results);
       }
     });
-}
+  }
 
   /*
    * Fetch all neighborhoods with proper error handling.
@@ -290,6 +245,7 @@ class DBHelper {
    */
     static fetchCuisines(callback) {
     if (restaurantCuisines) {
+      // data already fetched, so just return it
       callback(null, restaurantCuisines);
       return;
     }
@@ -311,7 +267,7 @@ class DBHelper {
     return (`./restaurant.html?id=${restaurant.id}`);
   }
 
-  /**
+  /*
    * Restaurant image URL.
    */
   static imageUrlForRestaurant(restaurant) {
@@ -340,5 +296,3 @@ class DBHelper {
   }
 
 }
-
-self.DBHelper = DBHelper;

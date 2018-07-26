@@ -46,13 +46,12 @@ var RRV_CACHE_URLS = [
 ];
 
 
-// pause the install event until we cache necessary assets
-
 /*
  * possibly cach the leaflet maps by something akin to ...
     else if (event.request.url.startsWith('https://api.tiles'))
  */
 this.addEventListener('install', function(event) {
+  // pause the install event until we cache necessary assets
   event.waitUntil(
     caches.open('RRV_CACHE').then(function(cache) {
       return cache.addAll(RRV_CACHE_URLS);
@@ -137,6 +136,17 @@ self. addEventListener("fetch", function(event) {
         })
       );
     }
+    /*
+     * !!! TO DO !!!
+     * let the browser decide with image to request
+     * check connection in DBHelper which grabs actual image
+     * imageUrlForRestaurant
+      if (requestUrl.pathname.startsWith('/img/')) {
+        event.respondWith(servePhoto(event.request));
+        return;
+      }
+     */
+
 });
 
 
