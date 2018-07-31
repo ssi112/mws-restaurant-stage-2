@@ -44,3 +44,5 @@ Additional info on [creating config.js](https://gist.github.com/derzorngottes/3b
 
 *Be certain to add config.js to the .gitignore file*
 
+## Project Overview: Stage 2
+

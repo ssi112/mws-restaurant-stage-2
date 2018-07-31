@@ -10,6 +10,7 @@ var RRV_CACHE_URLS = [
   '/index.js',
   '/css/styles.css',
   '/data/restaurants.json',
+  '/js/idb.js',
   '/js/dbhelper.js',
   '/js/main.js',
   '/js/restaurant_info.js',
@@ -42,7 +43,10 @@ var RRV_CACHE_URLS = [
   '/img/9_480px.jpg',
   '/img/10.jpg',
   '/img/10_320px.jpg',
-  '/img/10_480px.jpg'
+  '/img/10_480px.jpg',
+  '/img/default-annie-spratt.jpg',
+  '/img/default-annie-spratt_320px.jpg',
+  '/img/default-annie-spratt_480px.jpg'
 ];
 
 

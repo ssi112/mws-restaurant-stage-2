@@ -151,8 +151,12 @@ createRestaurantHTML = (restaurant) => {
   const li = document.createElement('li');
 
   const image = document.createElement('img');
-  image.className = 'restaurant-img';
-  image.src = DBHelper.imageUrlForRestaurant(restaurant);
+  image.className = 'restaurant-img lazyload';
+
+  // ORIGINAL
+  // image.src = DBHelper.imageUrlForRestaurant(restaurant);
+  // this creates the default (smallest) image
+  image.src = defaultImgSRC(restaurant);
 
   // added for accessibility
   image.alt = `image of ${restaurant.name}`;
@@ -180,6 +184,24 @@ createRestaurantHTML = (restaurant) => {
 
   return li
 }
+
+
+/*
+ * images stored in DB server as 1.jpg, 2.jpg, etc
+ * DBHelper function returns /img/1.jpg
+ * convert to the smallest default image size
+ *
+ * <img src="/img/1_320px.jpg"
+ */
+defaultImgSRC = (restaurant) => {
+  let imgSRC = DBHelper.imageUrlForRestaurant(restaurant);
+  let position = imgSRC.indexOf(".jpg");
+  imgSRC = imgSRC.slice(0, position) + '_320px' + imgSRC.slice(position);
+  // testing
+  // console.log(`defaultImgSRC:imgSRC: ${imgSRC}`);
+  return imgSRC;
+}
+
 
 /**
  * Add markers for current restaurants to the map.

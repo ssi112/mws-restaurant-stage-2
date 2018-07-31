@@ -8,6 +8,11 @@
  *
  */
 
+
+if (typeof idb === "undefined") {
+  self.importScripts('js/idb.js');
+}
+
 /*
  * filled by call to getNeighborhoodsCuisinesSelect
  * used in select lists to filter restaurants
@@ -47,7 +52,10 @@ class DBHelper {
       reject("Uh oh, IndexedDB is NOT supported in this browser!");
     }
     return idb.open(dbNAME, dbVERSION, function(upgradeDb) {
-      switch (upgradeDB.oldVersion) { // straight from Jake's IDB lib
+      var store = upgradeDb.createObjectStore(dbOBJECTSTORE, { keyPath: 'id' });
+      store.createIndex('by-id', 'id');
+      /*
+      switch (dbVERSION) {
         case 0:
         case 1: {
             var store = upgradeDb.createObjectStore(dbOBJECTSTORE, { keyPath: 'id' });
@@ -57,6 +65,7 @@ class DBHelper {
 
         }
       } // switch
+      */
     });
   }
 
@@ -296,3 +305,5 @@ class DBHelper {
   }
 
 }
+
+self.DBHelper = DBHelper;

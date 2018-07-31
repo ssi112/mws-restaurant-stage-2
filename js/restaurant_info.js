@@ -73,8 +73,17 @@ fillRestaurantHTML = (restaurant = self.restaurant) => {
   address.innerHTML = restaurant.address;
 
   const image = document.getElementById('restaurant-img');
-  image.className = 'restaurant-img'
-  image.src = DBHelper.imageUrlForRestaurant(restaurant);
+  image.className = 'restaurant-img lazyload';
+
+  // ORIGINAL
+  // image.src = DBHelper.imageUrlForRestaurant(restaurant);
+  // this creates the default (smallest) image
+  image.src = responsiveImgSRC(restaurant);
+
+  // this creates the srcset in the HTML so browser
+  // can decide which image to request
+  image.srcset = responsiveImgSRCSET(restaurant);
+
 
   // added for accessibility
   image.alt = `image of ${restaurant.name}`;
@@ -94,6 +103,41 @@ fillRestaurantHTML = (restaurant = self.restaurant) => {
   // fill reviews
   fillReviewsHTML();
 }
+
+
+/*
+ * images stored in DB server as 1.jpg, 2.jpg, etc
+ * DBHelper function returns /img/1.jpg
+ * convert to the smallest default image size
+ *
+ * <img src="/img/1_320px.jpg"
+ */
+responsiveImgSRC = (restaurant) => {
+  let imgSRC = DBHelper.imageUrlForRestaurant(restaurant);
+  let position = imgSRC.indexOf(".jpg");
+  imgSRC = imgSRC.slice(0, position) + '_320px' + imgSRC.slice(position);
+  // testing
+  // console.log(`defaultImgSRC:imgSRC: ${imgSRC}`);
+  return imgSRC;
+}
+
+/*
+ * build string for responsive images
+ *
+ *   srcset="/img/1_320px.jpg 320w,    // smallest image available
+ *           /img/1_480px.jpg 480w,    // medium image size
+ *           /img/1.jpg 800w"          // largest image
+ */
+responsiveImgSRCSET = (restaurant) => {
+  let imgSRC = DBHelper.imageUrlForRestaurant(restaurant);
+  let dot = imgSRC.lastIndexOf('.');
+  let imgSRCSET = `${imgSRC.slice(0, dot)}_320px.jpg 320w,`;
+  imgSRCSET += `\n ${imgSRC.slice(0, dot)}_480px.jpg 480w,`;
+  imgSRCSET += `\n ${imgSRC.slice(0, dot)}.jpg 800w`;
+  // console.log(`[${imgSRCSET}]`);
+  return imgSRCSET;
+}
+
 
 /**
  * Create restaurant operating hours HTML table and add it to the webpage.
