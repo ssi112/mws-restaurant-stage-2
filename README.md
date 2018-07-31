@@ -46,3 +46,21 @@ Additional info on [creating config.js](https://gist.github.com/derzorngottes/3b
 
 ## Project Overview: Stage 2
 
+Converted to pull data from external Sails server
+Added use of IndexedDB to store JSON data for offline first, network second
+*Note using J. Archibald's IndexedDB Promise library*
+Added favicon.ico
+Added manifest.json plus icons for PWA
+
+**Lighthouse Audit Score - Minimum Specifications**
+- PWA > 90
+- Performance > 70
+- Accessibility > 90
+
+Lighthouse Audit Settings
+
+Audit Results Using Above
+- PWA = 92
+- Performance =  91
+- Accessibility = 97
+
