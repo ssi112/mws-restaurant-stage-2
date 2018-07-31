@@ -45,22 +45,31 @@ Additional info on [creating config.js](https://gist.github.com/derzorngottes/3b
 *Be certain to add config.js to the .gitignore file*
 
 ## Project Overview: Stage 2
+For the Restaurant Reviews projects, you will incrementally convert a static webpage to a mobile-ready web application. In Stage Two, you will take the responsive, accessible design you built in Stage One and connect it to an external server. You’ll begin by using asynchronous JavaScript to request JSON data from the server. You’ll store data received from the server in an offline database using IndexedDB, which will create an app shell architecture. Finally, you’ll work to optimize your site to meet performance benchmarks, which you’ll test using Lighthouse.
 
-Converted to pull data from external Sails server
-Added use of IndexedDB to store JSON data for offline first, network second
-*Note using J. Archibald's IndexedDB Promise library*
-Added favicon.ico
-Added manifest.json plus icons for PWA
+- Converted to pull data from external Sails server
+- Added use of IndexedDB to store JSON data for offline first, network second
+- *Note using J. Archibald's IndexedDB Promise library*
+- Added favicon.ico
+- Added manifest.json plus icons for PWA
 
 **Lighthouse Audit Score - Minimum Specifications**
 - PWA > 90
 - Performance > 70
 - Accessibility > 90
 
-Lighthouse Audit Settings
+**Lighthouse Audit Settings**
+Using Chrome Canary - Disable all extensions or use Incognito window
+   1. Device: Mobile
+   2. Audits: Performance, Progressive Web App, Accessibility
+   3. Throttling: Simulated Fast 3G, 4x CPU Slowdown
 
-Audit Results Using Above
+**Audit Results Using Above**
 - PWA = 92
-- Performance =  91
+- Performance =  92
 - Accessibility = 97
 
+If No throttling chosen the scores results are as follows:
+- PWA = 92
+- Performance =  100
+- Accessibility = 97

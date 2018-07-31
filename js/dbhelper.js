@@ -17,13 +17,13 @@ if (typeof idb === "undefined") {
  * filled by call to getNeighborhoodsCuisinesSelect
  * used in select lists to filter restaurants
  */
-let restaurantCuisines;
-let restaurantNeighborhoods;
+var restaurantCuisines;
+var restaurantNeighborhoods;
 
 /*
  * holds all the restaurants
  */
-let allRestaurants;
+var allRestaurants;
 
 const dbVERSION = 1;
 const dbNAME = 'restaurant_reviews';
@@ -52,20 +52,20 @@ class DBHelper {
       reject("Uh oh, IndexedDB is NOT supported in this browser!");
     }
     return idb.open(dbNAME, dbVERSION, function(upgradeDb) {
-      var store = upgradeDb.createObjectStore(dbOBJECTSTORE, { keyPath: 'id' });
-      store.createIndex('by-id', 'id');
       /*
+      var store = upgradeDb.createObjectStore(dbOBJECTSTORE, { keyPath: 'id' });
+      store.createIndex('restID', 'id');
+      */
       switch (dbVERSION) {
         case 0:
         case 1: {
             var store = upgradeDb.createObjectStore(dbOBJECTSTORE, { keyPath: 'id' });
-            store.createIndex('by-id', 'id');
+            store.createIndex('restID', 'id');
         }
         case 2: {
-
+          // stage 3
         }
       } // switch
-      */
     });
   }
 
