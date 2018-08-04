@@ -73,3 +73,4 @@ If No throttling chosen the scores results are as follows:
 - PWA = 92
 - Performance =  100
 - Accessibility = 97
+

@@ -9,7 +9,6 @@ var RRV_CACHE_URLS = [
   '/restaurant.html',
   '/index.js',
   '/css/styles.css',
-  '/data/restaurants.json',
   '/js/idb.js',
   '/js/dbhelper.js',
   '/js/main.js',
@@ -51,7 +50,7 @@ var RRV_CACHE_URLS = [
 
 
 /*
- * possibly cach the leaflet maps by something akin to ...
+ * possibly cache the leaflet maps by something akin to ...
     else if (event.request.url.startsWith('https://api.tiles'))
  */
 this.addEventListener('install', function(event) {
@@ -150,7 +149,6 @@ self. addEventListener("fetch", function(event) {
         return;
       }
      */
-
 });
 
 
